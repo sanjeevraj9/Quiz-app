@@ -1,25 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Quiz App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuizCraft</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="alert">Alert</div>
-    <div class="btn startBtn">Start </div>
-    <div class="container">
-        <h1>Let's play a Quiz Game</h1>
-        <div class="question"></div>
-        <div class="choices"></div>
-        <button class="btn nextBtn">Next</button>
-        <div class="scoreCard"></div>
-        <div class="timer"></div>
-    </div>
-    <!-- <footer class="copyright">© Copyright Claim ❤ by Sanjeev</footer> -->
+  <div class="wrapper">
+    <!-- Alert Box -->
+    <div class="alert"></div>
 
-    <script src="script.js"></script>
+    <!-- Start Screen -->
+    <div id="start-screen">
+      <h1>Welcome to the Quiz Game!</h1>
+      <button class="btn" id="startBtn">Start Quiz</button>
+    </div>
+    
+
+    <!-- Quiz Container -->
+    <div id="quiz-container" class="hidden">
+      <h2 id="question"></h2>
+      <div id="choices"></div>
+
+      <div class="bottom-panel">
+        <button class="btn" id="nextBtn">Next</button>
+        <div id="scoreCard"></div>
+        <div id="timer">Time: 15s</div>
+      </div>
+    </div>
+
+    <footer class="copyright">© 2025 by Your Sanjeev &#10084;</footer>
+  </div>
+
+  <script src="script.js" defer></script>
+
 </body>
 </html>
