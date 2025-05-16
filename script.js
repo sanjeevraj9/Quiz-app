@@ -1,184 +1,251 @@
-const container = document.querySelector('.container');
-const questionBox = document.querySelector('.question');
-const choicesBox = document.querySelector('.choices');
-const nextBtn = document.querySelector('.nextBtn');
-const scoreCard = document.querySelector('.scoreCard');
-const alert = document.querySelector('.alert');
-const startBtn = document.querySelector('.startBtn');
-const timer = document.querySelector('.timer');
+const startBtn = document.getElementById("startBtn");
+const nextBtn = document.getElementById("nextBtn");
+const questionBox = document.getElementById("question");
+const choicesBox = document.getElementById("choices");
+const scoreCard = document.getElementById("scoreCard");
+const alertBox = document.querySelector(".alert");
+const timer = document.getElementById("timer");
+const startScreen = document.getElementById("start-screen");
+const quizContainer = document.getElementById("quiz-container");
 
-
-// Make an array of objects that stores question, choices of question and answer
-const quiz = [
-    {
-        question: "Q. Which of the following is not a CSS box model property?",
-        choices: ["margin", "padding", "border-radius", "border-collapse"],
-        answer: "border-collapse"
-    },
-    {
-        question: "Q. Which of the following is not a valid way to declare a function in JavaScript?",
-        choices: ["function myFunction() {}", " let myFunction = function() {};", "myFunction: function() {}", "const myFunction = () => {};"],
-        answer: "myFunction: function() {}"
-    },
-    {
-        question: "Q. Which of the following is not a JavaScript data type?",
-        choices: ["string", "boolean", "object", "float"],
-        answer: "float"
-    },
-    {
-        question: "Q. What is the purpose of the this keyword in JavaScript?",
-        choices: ["It refers to the current function.", "It refers to the current object.", "It refers to the parent object.", " It is used for comments."],
-        answer: "It refers to the current object."
-    }
+const originalQuiz = [
+  {
+    question: "Which of the following is not a CSS box model property?",
+    choices: ["margin", "padding", "border-radius", "border-collapse"],
+    answer: "border-collapse"
+  },
+  {
+    question: "Which of the following is not a valid way to declare a function in JavaScript?",
+    choices: [
+      "function myFunction() {}",
+      "let myFunction = function() {};",
+      "myFunction: function() {}",
+      "const myFunction = () => {};"
+    ],
+    answer: "myFunction: function() {}"
+  },
+  {
+    question: "Which of the following is not a JavaScript data type?",
+    choices: ["string", "boolean", "object", "float"],
+    answer: "float"
+  },
+  {
+    question: "What is the purpose of the this keyword in JavaScript?",
+    choices: [
+      "It refers to the current function.",
+      "It refers to the current object.",
+      "It refers to the parent object.",
+      "It is used for comments."
+    ],
+    answer: "It refers to the current object."
+  },
+  {
+    question: "Which language is primarily used for Android app development?",
+    choices: ["Swift", "Java", "Python", "C#"],
+    answer: "Java"
+  },
+  {
+    question: "What does HTML stand for?",
+    choices: ["HyperText Markup Language", "HyperText Makeup Language", "HyperTool Markup Language", "HyperTransfer Markup Language"],
+    answer: "HyperText Markup Language"
+  },
+  {
+    question: "Which data structure uses FIFO (First In First Out)?",
+    choices: ["Stack", "Queue", "Tree", "Graph"],
+    answer: "Queue"
+  },
+  {
+    question: "In databases, what does SQL stand for?",
+    choices: ["Structured Query Language", "Simple Query Language", "Structured Question Language", "Simple Question Language"],
+    answer: "Structured Query Language"
+  },
+  {
+    question: "What is the time complexity of binary search on a sorted array?",
+    choices: ["O(n)", "O(log n)", "O(n log n)", "O(1)"],
+    answer: "O(log n)"
+  }
 ];
 
-// Making Variables
+let quiz = [];
 let currentQuestionIndex = 0;
 let score = 0;
 let quizOver = false;
 let timeLeft = 15;
 let timerID = null;
 
-// Arrow Function to Show Questions
-const showQuestions = () => {
-    const questionDetails = quiz[currentQuestionIndex];
-    questionBox.textContent = questionDetails.question;
-
-    choicesBox.textContent = "";
-    for (let i = 0; i < questionDetails.choices.length; i++) {
-        const currentChoice = questionDetails.choices[i];
-        const choiceDiv = document.createElement('div');
-        choiceDiv.textContent = currentChoice;
-        choiceDiv.classList.add('choice');
-        choicesBox.appendChild(choiceDiv);
-
-        choiceDiv.addEventListener('click', () => {
-            if (choiceDiv.classList.contains('selected')) {
-                choiceDiv.classList.remove('selected');
-            }
-            else {
-                choiceDiv.classList.add('selected');
-            }
-        });
-    }
-
-    if(currentQuestionIndex < quiz.length){
-        startTimer();
-    }
+function shuffleArray(array) {
+  return array.sort(() => Math.random() - 0.5);
 }
 
-// Function to check answers
-const checkAnswer = () => {
-    const selectedChoice = document.querySelector('.choice.selected');
-    if (selectedChoice.textContent === quiz[currentQuestionIndex].answer) {
-        // alert("Correct Answer!");
-        displayAlert("Correct Answer!");
-        score++;
-    }
-    else {
-        // alert("Wrong answer");
-        displayAlert(`Wrong Answer! ${quiz[currentQuestionIndex].answer} is the Correct Answer`);
-    }
-    timeLeft = 15;
-    currentQuestionIndex++;
-    if (currentQuestionIndex < quiz.length) {
-        showQuestions();
-    }
-    else {
-        stopTimer();
-        showScore();
-    }
+function resetState() {
+  clearInterval(timerID);
+  timeLeft = 15;
+  timer.textContent = `Time: ${timeLeft}s`;
+  timer.style.display = "block";
+  alertBox.style.display = "none";
+  nextBtn.disabled = true;
+  nextBtn.textContent = "Next";
+  scoreCard.textContent = "";
+  choicesBox.innerHTML = "";
+  questionBox.textContent = "";
+  quizOver = false;
 }
 
-// Function to show score
-const showScore = () => {
-    questionBox.textContent = "";
-    choicesBox.textContent = "";
-    scoreCard.textContent = `You Scored ${score} out of ${quiz.length}!`;
-    displayAlert("You have completed this quiz!");
-    nextBtn.textContent = "Play Again";
-    quizOver = true;
-    timer.style.display = "none";
+function startQuiz() {
+  resetState();
+
+  startScreen.classList.add("hidden");
+  quizContainer.classList.remove("hidden");
+
+  currentQuestionIndex = 0;
+  score = 0;
+  quizOver = false;
+
+  // Clone and shuffle quiz
+  quiz = shuffleArray(JSON.parse(JSON.stringify(originalQuiz)));
+  quiz.forEach(q => q.choices = shuffleArray(q.choices));
+
+  showQuestion();
+  startTimer();
 }
 
-// Function to Show Alert
-const displayAlert = (msg) => {
-    alert.style.display = "block";
-    alert.textContent = msg;
-    setTimeout(()=>{
-        alert.style.display = "none";
+function showQuestion() {
+  clearInterval(timerID);
+  timeLeft = 15;
+  timer.textContent = `Time: ${timeLeft}s`;
+  startTimer();
+
+  nextBtn.disabled = true;
+  alertBox.style.display = "none";
+
+  const current = quiz[currentQuestionIndex];
+  questionBox.textContent = current.question;
+  choicesBox.innerHTML = "";
+
+  current.choices.forEach(choice => {
+    const div = document.createElement("div");
+    div.textContent = choice;
+    div.classList.add("choice");
+    div.style.pointerEvents = "auto";
+
+    div.addEventListener("click", () => {
+      if (!nextBtn.disabled) return;
+
+      document.querySelectorAll(".choice").forEach(c => {
+        c.classList.remove("selected", "correct", "wrong");
+      });
+
+      div.classList.add("selected");
+      nextBtn.disabled = false;
+      alertBox.style.display = "none";
+    });
+
+    choicesBox.appendChild(div);
+  });
+}
+
+function checkAnswer() {
+  const selected = document.querySelector(".choice.selected");
+  if (!selected) {
+    showAlert("Please select an answer.");
+    return;
+  }
+
+  document.querySelectorAll(".choice").forEach(c => {
+    c.style.pointerEvents = "none";
+  });
+
+  const correctAnswer = quiz[currentQuestionIndex].answer;
+  const choices = document.querySelectorAll(".choice");
+
+  if (selected.textContent === correctAnswer) {
+    selected.classList.add("correct");
+    score++;
+    showAlert("Correct!", "success");
+  } else {
+    selected.classList.add("wrong");
+    showAlert(`Wrong! Answer.`, "error");
+
+    choices.forEach(choice => {
+      if (choice.textContent === correctAnswer) {
+        choice.classList.add("correct");
+      }
+    });
+  }
+
+  nextBtn.disabled = true;
+  clearInterval(timerID);
+
+  currentQuestionIndex++;
+
+  if (currentQuestionIndex < quiz.length) {
+    setTimeout(() => {
+      showQuestion();
+    }, 2500);
+  } else {
+    setTimeout(showScore, 2500);
+  }
+}
+
+function showScore() {
+  questionBox.textContent = "";
+  choicesBox.innerHTML = "";
+  scoreCard.textContent = `You scored ${score} out of ${quiz.length}`;
+  nextBtn.textContent = "Play Again";
+  quizOver = true;
+  timer.style.display = "none";
+  clearInterval(timerID);
+  nextBtn.disabled = false;
+}
+
+function showAlert(message, type = "info") {
+  alertBox.textContent = message;
+  alertBox.style.display = "block";
+  alertBox.style.backgroundColor =
+    type === "success" ? "#28a745" :
+    type === "error" ? "#dc3545" :
+    "#17a2b8";
+
+  if (message !== "Please select an answer.") {
+    setTimeout(() => {
+      alertBox.style.display = "none";
     }, 2000);
+  }
 }
 
-// Function to Start Timer
-const startTimer = () => {
-    clearInterval(timerID); // Check for any exist timers
-    timer.textContent = timeLeft;
+function startTimer() {
+  timer.textContent = `Time: ${timeLeft}s`;
+  clearInterval(timerID);
+  timerID = setInterval(() => {
+    timeLeft--;
+    timer.textContent = `Time: ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(timerID);
+      showAlert("Time's up!", "error");
 
-    const countDown = ()=>{
-        timeLeft--;
-        timer.textContent = timeLeft;
-        if(timeLeft === 0){
-            const confirmUser = confirm("Time Up!!! Do you want to play the quiz again");
-            if(confirmUser){
-                timeLeft = 15;
-                startQuiz();
-            }
-            else{
-                startBtn.style.display = "block";
-                container.style.display = "none";
-                return;
-            }
-        }
+      document.querySelectorAll(".choice").forEach(c => {
+        c.style.pointerEvents = "none";
+      });
+
+      nextBtn.disabled = true;
+
+      currentQuestionIndex++;
+      if (currentQuestionIndex < quiz.length) {
+        setTimeout(showQuestion, 2500);
+      } else {
+        setTimeout(showScore, 2500);
+      }
     }
-    timerID = setInterval(countDown, 1000);
+  }, 1000);
 }
 
-// Function to Stop Timer
-const stopTimer = () =>{
-    clearInterval(timerID);
-}
+// Event listeners
+startBtn.addEventListener("click", startQuiz);
 
-// Function to shuffle question
-const shuffleQuestions = () =>{
-    for(let i=quiz.length-1; i>0; i--){
-        const j = Math.floor(Math.random() * (i+1));
-        [quiz[i], quiz[j]] = [quiz[j], quiz[i]];
-    }
-    currentQuestionIndex = 0;
-    showQuestions();
-}
-
-// Function to Start Quiz
-const startQuiz = () =>{
-    timeLeft = 15;
-    timer.style.display = "flex";
-    shuffleQuestions();
-}
-
-// Adding Event Listener to Start Button
-startBtn.addEventListener('click', ()=>{
-    startBtn.style.display = "none";
-    container.style.display = "block";
+nextBtn.addEventListener("click", () => {
+  if (quizOver) {
     startQuiz();
-});
-
-nextBtn.addEventListener('click', () => {
-    const selectedChoice = document.querySelector('.choice.selected');
-    if (!selectedChoice && nextBtn.textContent === "Next") {
-        // alert("Select your answer");
-        displayAlert("Select your answer");
-        return;
-    }
-    if (quizOver) {
-        nextBtn.textContent = "Next";
-        scoreCard.textContent = "";
-        currentQuestionIndex = 0;
-        quizOver = false;
-        score = 0;
-        startQuiz();
-    }
-    else {
-        checkAnswer();
-    }
+  } else {
+    checkAnswer();
+  }
 });
